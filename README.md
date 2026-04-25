@@ -87,16 +87,22 @@ scheduler = Scheduler(on_outcome=log_outcome)
 
 ## Empirical results
 
-`examples/sim_churn.py` runs a synthetic 24-hour workload of optimizer-style proposals through the pipeline at a sweep of `move_threshold` values, across multiple seeds. The two panels compare the library's default reschedule penalty (`stability=1`, left) against the same scheduler with the penalty disabled (`stability=0`, right).
+`examples/sim_pareto_workloads.py` sweeps `move_threshold` across three synthetic workloads (50 seeds each) and plots the resulting Pareto curve in `(notifications-per-task-per-day, schedule-deviation)` space. The deviation metric is mean absolute distance of `slot.end` from a reference "ideal end" of `deadline - 0.5h`, deliberately *not* derived from the scheduler's own scoring function so the metric isn't coupled to the gate it's evaluating.
 
-![Pipeline decision composition vs. move_threshold](examples/sim_churn.png)
+![Churn vs. quality across workloads](examples/sim_pareto_workloads.png)
 
-Read this as a controlled toy, not a benchmark. Two things to notice:
+Read this as a controlled toy, not a benchmark. What it shows:
 
-- **The threshold gate dominates.** As `move_threshold` slides right, the red `BLOCKED_BY_THRESHOLD` band swells and the green `apply` band shrinks. By 0.30 the gate is absorbing the vast majority of optimizer-noise proposals.
-- **In this workload the stability term contributes a small marginal effect on top of the threshold.** The two panels look almost identical. The reschedule penalty bites hardest when a task has *just* been moved (inverse decay over hours-since-last-move), and this synthetic workload doesn't churn the same task aggressively enough to keep most proposals inside that window. To exercise the term, raise `PROPOSAL_RATE` and/or narrow `pick_task` to focus on already-moved tasks. The shape that does emerge here — small, monotone-positive — is consistent with what you'd want from a production-tier penalty: invisible most of the time, present when needed.
+- **The threshold mechanism works as advertised.** Higher threshold → fewer notifications, monotonically, across every workload.
+- **The churn-versus-quality tradeoff is real on chaotic.** Each notification "buys" roughly 3.4 hours of better placement on average. Not a tautology: it could have been free or catastrophic. It's a moderate, roughly linear cost.
+- **Workload shape changes the tradeoff.** The three curves are different species, not scaled versions of each other. There is no workload-independent "right" threshold because the exchange rate between notifications and quality depends on what the proposer is doing.
 
-Run `python examples/sim_churn.py` to regenerate.
+What it doesn't show:
+
+- That `0.15` is a good default. It is defensible on chaotic, inert on quiet, and neither helps nor is meaningfully overcome by parameter tuning on adversarial. Which workload real users have isn't a question this experiment can answer.
+- That the adversarial curve is flat *because of* the threshold. It's flat across the whole sweep including threshold zero — the proposer is producing updates the scheduler can't usefully act on. That's a scheduler-level finding, not a threshold-level one.
+
+Run `python examples/sim_pareto_workloads.py` to regenerate. Companion article: [Why Optimal Scheduling Breaks User Trust](https://arjona.dev/writing/optimal-scheduling).
 
 ## What this library does *not* do
 
