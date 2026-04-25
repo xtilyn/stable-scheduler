@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stable-scheduler"
+version = "0.1.0"
+description = "A scheduling library that optimizes for stability, not just optimality."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Chris Arjona" }]
+keywords = ["scheduling", "stability", "task-management", "planning", "optimization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+examples = ["matplotlib>=3.7"]
+
+[project.urls]
+Homepage = "https://arjona.dev/writing/optimal-scheduling"
+Repository = "https://github.com/xtilyn/stable-scheduler"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stable_scheduler"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+files = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
